@@ -14,6 +14,8 @@ MVP de landing page para a HILOS, marca de moda de Pernambuco, construído a par
 🔗 **Demo:** [hilos-mvp.vercel.app](https://hilos-mvp.vercel.app)
 *(sem fotografia real e com dados comerciais de placeholder — ver [pendências](#pendências-de-conteúdo))*
 
+![Captura de tela do HILOS](docs/img/preview.png)
+
 > Projeto de portfólio: página inteira construída a partir de um briefing escrito, sem assets reais da marca. O objetivo é demonstrar tradução de um conceito de identidade visual em interface, não representar a HILOS oficialmente.
 
 ## Funcionalidades
