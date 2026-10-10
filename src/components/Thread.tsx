@@ -11,7 +11,8 @@ import {
 import { useCallback, useEffect, useRef, useState, type RefObject } from "react";
 
 type Point = { x: number; y: number };
-type Geometry = { width: number; height: number; d: string; top: number };
+type Lut = { len: Float32Array; x: Float32Array; y: Float32Array; maxY: Float32Array };
+type Geometry = { width: number; height: number; d: string; top: number; total: number; lut: Lut };
 
 // Each [data-thread] element lists points as "x:y" pairs (fractions of the
 // container width / the element height). A third ":loop" field ties a knot.
@@ -68,7 +69,7 @@ function loopPoints(x: number, y: number, r: number): Point[] {
 function addWaves(points: Point[], width: number, mobile: boolean): Point[] {
   if (points.length < 2) return points;
   const wavelength = mobile ? 380 : 620;
-  const spacing = wavelength / 12;
+  const spacing = wavelength / 8;
   const out: Point[] = [points[0]];
   for (let i = 1; i < points.length; i++) {
     const a = points[i - 1];
@@ -95,9 +96,25 @@ function addWaves(points: Point[], width: number, mobile: boolean): Point[] {
   return out;
 }
 
-function toPath(points: Point[]) {
-  if (points.length < 2) return "";
+const SAMPLES_PER_SEGMENT = 10;
+
+// Builds the SVG path (Catmull-Rom through the points, as cubic Béziers) and,
+// in the same pass, an arc-length lookup table sampled from those curves.
+// Everything is computed in plain JS, so scrolling never has to query the DOM
+// for path geometry.
+function buildPath(points: Point[]): { d: string; total: number; lut: Lut } | null {
+  if (points.length < 2) return null;
+  const count = (points.length - 1) * SAMPLES_PER_SEGMENT + 1;
+  const len = new Float32Array(count);
+  const xs = new Float32Array(count);
+  const ys = new Float32Array(count);
+  const maxY = new Float32Array(count);
+  xs[0] = points[0].x;
+  ys[0] = points[0].y;
+  maxY[0] = points[0].y;
   let d = `M ${points[0].x.toFixed(1)} ${points[0].y.toFixed(1)}`;
+  let idx = 1;
+
   for (let i = 0; i < points.length - 1; i++) {
     const p0 = points[i - 1] ?? points[i];
     const p1 = points[i];
@@ -108,8 +125,36 @@ function toPath(points: Point[]) {
     const c2x = p2.x - (p3.x - p1.x) / 6;
     const c2y = p2.y - (p3.y - p1.y) / 6;
     d += ` C ${c1x.toFixed(1)} ${c1y.toFixed(1)}, ${c2x.toFixed(1)} ${c2y.toFixed(1)}, ${p2.x.toFixed(1)} ${p2.y.toFixed(1)}`;
+
+    for (let k = 1; k <= SAMPLES_PER_SEGMENT; k++) {
+      const t = k / SAMPLES_PER_SEGMENT;
+      const u = 1 - t;
+      const a = u * u * u;
+      const b = 3 * u * u * t;
+      const c = 3 * u * t * t;
+      const e = t * t * t;
+      const x = a * p1.x + b * c1x + c * c2x + e * p2.x;
+      const y = a * p1.y + b * c1y + c * c2y + e * p2.y;
+      len[idx] = len[idx - 1] + Math.hypot(x - xs[idx - 1], y - ys[idx - 1]);
+      xs[idx] = x;
+      ys[idx] = y;
+      maxY[idx] = Math.max(maxY[idx - 1], y);
+      idx++;
+    }
   }
-  return d;
+
+  return { d, total: len[count - 1], lut: { len, x: xs, y: ys, maxY } };
+}
+
+function search(arr: Float32Array, value: number) {
+  let lo = 0;
+  let hi = arr.length - 1;
+  while (lo < hi) {
+    const mid = (lo + hi) >> 1;
+    if (arr[mid] < value) lo = mid + 1;
+    else hi = mid;
+  }
+  return lo;
 }
 
 export function Thread({
@@ -118,104 +163,84 @@ export function Thread({
   containerRef: RefObject<HTMLDivElement | null>;
 }) {
   const [geometry, setGeometry] = useState<Geometry | null>(null);
-  const [total, setTotal] = useState(0);
-  const pathRef = useRef<SVGPathElement>(null);
-  const lengthRef = useRef(0);
-  const lutRef = useRef<{ lengths: Float32Array; maxY: Float32Array } | null>(null);
+  const geometryRef = useRef<Geometry | null>(null);
+  const frame = useRef(0);
 
   const target = useMotionValue(0);
-  const drawn = useSpring(target, { stiffness: 70, damping: 22, mass: 0.6 });
+  const drawn = useSpring(target, { stiffness: 140, damping: 28, mass: 0.5 });
   const needleX = useMotionValue(-100);
   const needleY = useMotionValue(-100);
   const needleRotate = useMotionValue(90);
-  const dashOffset = useTransform(drawn, (v) => Math.max(lengthRef.current - v, 0));
+  const dashOffset = useTransform(drawn, (v) => Math.max((geometryRef.current?.total ?? 0) - v, 0));
   const { scrollY } = useScroll();
 
   const measure = useCallback(() => {
     const container = containerRef.current;
     if (!container) return;
     const mobile = container.offsetWidth < 768;
-    const points = parseAnchors(container, mobile);
-    setGeometry({
-      width: container.offsetWidth,
-      height: container.offsetHeight,
-      d: toPath(points),
-      top: container.getBoundingClientRect().top + window.scrollY,
-    });
+    const built = buildPath(parseAnchors(container, mobile));
+    if (!built) return;
+    const top = container.getBoundingClientRect().top + window.scrollY;
+    const prev = geometryRef.current;
+    if (prev && prev.d === built.d && Math.abs(prev.top - top) < 1) return;
+    const next = { width: container.offsetWidth, height: container.offsetHeight, top, ...built };
+    geometryRef.current = next;
+    setGeometry(next);
   }, [containerRef]);
 
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
-    const observer = new ResizeObserver(() => measure());
+    const schedule = () => {
+      cancelAnimationFrame(frame.current);
+      frame.current = requestAnimationFrame(measure);
+    };
+    const observer = new ResizeObserver(schedule);
     observer.observe(container);
-    window.addEventListener("load", measure);
+    window.addEventListener("load", schedule);
     return () => {
+      cancelAnimationFrame(frame.current);
       observer.disconnect();
-      window.removeEventListener("load", measure);
+      window.removeEventListener("load", schedule);
     };
   }, [containerRef, measure]);
 
   const sync = useCallback(
     (scroll: number) => {
-      const lut = lutRef.current;
-      if (!lut || !geometry) return;
-      const focusY = scroll + window.innerHeight * 0.62 - geometry.top;
-      const { lengths, maxY } = lut;
-      let lo = 0;
-      let hi = maxY.length - 1;
-      while (lo < hi) {
-        const mid = (lo + hi) >> 1;
-        if (maxY[mid] < focusY) lo = mid + 1;
-        else hi = mid;
-      }
-      target.set(lengths[lo]);
+      const g = geometryRef.current;
+      if (!g) return;
+      const focusY = scroll + window.innerHeight * 0.62 - g.top;
+      target.set(g.lut.len[search(g.lut.maxY, focusY)]);
     },
-    [geometry, target],
+    [target],
   );
 
   useEffect(() => {
-    const path = pathRef.current;
-    if (!path || !geometry?.d) return;
-    const total = path.getTotalLength();
-    lengthRef.current = total;
-    const step = 6;
-    const count = Math.ceil(total / step) + 1;
-    const lengths = new Float32Array(count);
-    const maxY = new Float32Array(count);
-    let running = -Infinity;
-    for (let i = 0; i < count; i++) {
-      const l = Math.min(i * step, total);
-      running = Math.max(running, path.getPointAtLength(l).y);
-      lengths[i] = l;
-      maxY[i] = running;
-    }
-    lutRef.current = { lengths, maxY };
-    setTotal(total);
-    sync(window.scrollY);
+    if (geometry) sync(window.scrollY);
   }, [geometry, sync]);
 
   useMotionValueEvent(scrollY, "change", sync);
 
   useMotionValueEvent(drawn, "change", (value) => {
-    const path = pathRef.current;
-    if (!path || !lengthRef.current) return;
-    const l = Math.min(Math.max(value, 1), lengthRef.current);
-    const p = path.getPointAtLength(l);
-    const prev = path.getPointAtLength(Math.max(l - 3, 0));
-    needleX.set(p.x);
-    needleY.set(p.y);
-    needleRotate.set((Math.atan2(p.y - prev.y, p.x - prev.x) * 180) / Math.PI);
+    const g = geometryRef.current;
+    if (!g) return;
+    const { len, x, y } = g.lut;
+    const i = Math.max(search(len, Math.min(Math.max(value, 0), g.total)), 1);
+    const span = len[i] - len[i - 1] || 1;
+    const f = Math.min(Math.max((value - len[i - 1]) / span, 0), 1);
+    needleX.set(x[i - 1] + (x[i] - x[i - 1]) * f);
+    needleY.set(y[i - 1] + (y[i] - y[i - 1]) * f);
+    needleRotate.set((Math.atan2(y[i] - y[i - 1], x[i] - x[i - 1]) * 180) / Math.PI);
   });
 
-  if (!geometry?.d) return null;
+  if (!geometry) return null;
 
   return (
     <motion.svg
       aria-hidden
       initial={{ opacity: 0 }}
-      animate={{ opacity: total ? 1 : 0 }}
-      transition={{ duration: 1, delay: 0.4 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 1, delay: 0.3 }}
       width={geometry.width}
       height={geometry.height}
       viewBox={`0 0 ${geometry.width} ${geometry.height}`}
@@ -232,22 +257,23 @@ export function Thread({
       />
       <motion.path
         d={geometry.d}
+        pathLength={geometry.total}
         fill="none"
         stroke="var(--color-terracotta)"
         strokeOpacity={0.16}
         strokeWidth={9}
         strokeLinecap="round"
-        strokeDasharray={total || 1}
+        strokeDasharray={geometry.total}
         style={{ strokeDashoffset: dashOffset }}
       />
       <motion.path
-        ref={pathRef}
         d={geometry.d}
+        pathLength={geometry.total}
         fill="none"
         stroke="var(--color-terracotta)"
         strokeWidth={2.4}
         strokeLinecap="round"
-        strokeDasharray={total || 1}
+        strokeDasharray={geometry.total}
         style={{ strokeDashoffset: dashOffset }}
       />
       <motion.g style={{ x: needleX, y: needleY, rotate: needleRotate }}>

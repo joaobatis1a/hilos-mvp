@@ -51,7 +51,7 @@ export function Header() {
             backgroundColor: solid && !open ? "rgba(247,242,233,0.82)" : "rgba(247,242,233,0)",
             borderColor: solid && !open ? "rgba(22,19,13,0.1)" : "rgba(22,19,13,0)",
           }}
-          className="border-b backdrop-blur-[2px]"
+          className="border-b"
         >
           <div className="container-hilos grid h-16 grid-cols-[1fr_auto_1fr] items-center gap-3 md:h-20">
             <button

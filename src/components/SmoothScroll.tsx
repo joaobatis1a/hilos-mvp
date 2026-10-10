@@ -22,7 +22,7 @@ export function SmoothScroll({ children }: { children: ReactNode }) {
     const instance = new Lenis({
       autoRaf: true,
       anchors: { offset: -40 },
-      lerp: 0.09,
+      lerp: 0.13,
       respectReducedMotion: true,
     });
     // Lenis is an external system; exposing it after construction is the subscription pattern.

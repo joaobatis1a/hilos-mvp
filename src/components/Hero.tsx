@@ -83,7 +83,6 @@ export function Hero() {
   const { scrollY } = useScroll();
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
   const wordmarkY = useTransform(scrollYProgress, [0, 1], ["0%", "35%"]);
-  const wordmarkSpacing = useTransform(scrollYProgress, [0, 1], ["0em", "0.12em"]);
   const copyOpacity = useTransform(scrollYProgress, [0, 0.55], [1, 0]);
   const copyY = useTransform(scrollYProgress, [0, 1], [0, -120]);
 
@@ -105,7 +104,7 @@ export function Hero() {
     >
       <motion.div
         aria-hidden
-        style={{ y: wordmarkY, letterSpacing: wordmarkSpacing }}
+        style={{ y: wordmarkY }}
         className="pointer-events-none absolute inset-x-0 bottom-[11vh] flex justify-center font-display text-[31vw] leading-[0.8] font-medium text-outline-ink opacity-60 select-none md:bottom-[6vh] md:text-[27vw]"
       >
         {WORDMARK.map((letter, i) => (

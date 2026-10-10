@@ -85,7 +85,7 @@ export function FeaturedProduct() {
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: -8 }}
                 transition={{ duration: 0.35 }}
-                className="absolute right-4 bottom-4 left-4 z-20 rounded-2xl bg-cream/90 p-4 backdrop-blur-md md:right-auto md:max-w-[16rem]"
+                className="absolute right-4 bottom-4 left-4 z-20 rounded-2xl bg-cream/95 p-4 md:right-auto md:max-w-[16rem]"
               >
                 <p className="eyebrow text-[0.62rem] text-terracotta">
                   Detalhe {String(active + 1).padStart(2, "0")}

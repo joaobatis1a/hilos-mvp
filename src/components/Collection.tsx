@@ -51,7 +51,7 @@ function ProductCard({
         <span className="absolute bottom-4 left-5 font-display text-7xl leading-none text-outline-cream md:text-8xl">
           {number}
         </span>
-        <span className="eyebrow absolute top-[18%] left-1/2 -translate-x-1/2 rounded-full bg-cream/85 px-3 py-1.5 text-[0.62rem] text-ink backdrop-blur-sm">
+        <span className="eyebrow absolute top-[18%] left-1/2 -translate-x-1/2 rounded-full bg-cream/90 px-3 py-1.5 text-[0.62rem] text-ink">
           {product.category}
         </span>
       </div>

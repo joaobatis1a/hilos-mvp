@@ -3,7 +3,6 @@
 import {
   AnimatePresence,
   motion,
-  useMotionTemplate,
   useMotionValue,
   useSpring,
 } from "framer-motion";
@@ -57,14 +56,13 @@ export function Wholesale() {
   const [form, setForm] = useState(EMPTY);
   const [error, setError] = useState<string | null>(null);
 
-  const mx = useSpring(useMotionValue(50), { stiffness: 80, damping: 20 });
-  const my = useSpring(useMotionValue(40), { stiffness: 80, damping: 20 });
-  const spotlight = useMotionTemplate`radial-gradient(520px circle at ${mx}% ${my}%, rgba(189,91,53,0.32), transparent 70%)`;
+  const mx = useSpring(useMotionValue(720), { stiffness: 80, damping: 20 });
+  const my = useSpring(useMotionValue(360), { stiffness: 80, damping: 20 });
 
   function onPointerMove(e: PointerEvent<HTMLElement>) {
     const rect = e.currentTarget.getBoundingClientRect();
-    mx.set(((e.clientX - rect.left) / rect.width) * 100);
-    my.set(((e.clientY - rect.top) / rect.height) * 100);
+    mx.set(e.clientX - rect.left);
+    my.set(e.clientY - rect.top);
   }
 
   function go(next: number) {
@@ -111,7 +109,11 @@ export function Wholesale() {
       data-thread-mobile="0.025:0.02 0.035:0.5 0.022:0.97"
       className="relative overflow-hidden bg-ink py-24 text-cream md:py-32"
     >
-      <motion.div aria-hidden style={{ background: spotlight }} className="pointer-events-none absolute inset-0" />
+      <motion.div
+        aria-hidden
+        style={{ x: mx, y: my }}
+        className="pointer-events-none absolute top-[-520px] left-[-520px] h-[1040px] w-[1040px] rounded-full bg-[radial-gradient(circle,rgba(189,91,53,0.32),transparent_70%)] will-change-transform"
+      />
 
 
       <div className="container-hilos relative grid grid-cols-1 gap-14 md:grid-cols-[1fr_1.05fr] md:gap-20">
@@ -155,7 +157,7 @@ export function Wholesale() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
-          className="relative self-start overflow-hidden rounded-[2rem] border border-cream/15 bg-cream/[0.04] p-6 shadow-[0_0_80px_-20px_rgba(189,91,53,0.5)] backdrop-blur-md md:p-10"
+          className="relative self-start overflow-hidden rounded-[2rem] border border-cream/15 bg-cream/[0.05] p-6 shadow-[0_0_80px_-20px_rgba(189,91,53,0.5)] md:p-10"
         >
           <div className="mb-10 flex items-center">
             {STEPS.map((s, i) => (

@@ -1,8 +1,8 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useInView } from "framer-motion";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { RevealLines } from "./RevealLines";
 import { locations } from "@/lib/content";
 import { buildWhatsAppLink } from "@/lib/whatsapp";
@@ -13,16 +13,19 @@ const EASE = [0.76, 0, 0.24, 1] as const;
 export function Locations() {
   const [active, setActive] = useState(0);
   const [paused, setPaused] = useState(false);
+  const sectionRef = useRef<HTMLElement>(null);
+  const inView = useInView(sectionRef, { margin: "-15% 0px" });
 
   useEffect(() => {
-    if (paused) return;
+    if (paused || !inView) return;
     const id = window.setInterval(() => setActive((a) => (a + 1) % locations.length), 4200);
     return () => window.clearInterval(id);
-  }, [paused]);
+  }, [paused, inView]);
 
   return (
     <section
       id="movimento"
+      ref={sectionRef}
       data-thread="0.03:0.02 0.5:0.05 0.97:0.09 0.975:0.9"
       data-thread-mobile="0.975:0.0 0.5:0.035 0.025:0.075 0.03:0.3 0.55:0.6:loop 0.03:0.97"
       className="relative py-24 md:py-32"
@@ -140,7 +143,7 @@ export function Locations() {
                   )}
                 </AnimatePresence>
 
-                {isActive && !paused && (
+                {isActive && !paused && inView && (
                   <motion.span
                     key={`bar-${active}`}
                     initial={{ scaleX: 0 }}
