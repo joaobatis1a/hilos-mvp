@@ -1,94 +1,93 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { ImagePlaceholder } from "./ImagePlaceholder";
-import { SectionDot } from "./ThreadRail";
-import { RevealLines } from "./RevealLines";
+import { motion, useScroll, useTransform } from "framer-motion";
+import Image from "next/image";
+import { useRef } from "react";
 import { Magnetic } from "./Magnetic";
+import { useLenis, scrollToHash } from "./SmoothScroll";
+import { photos } from "@/lib/content";
 import { buildWhatsAppLink } from "@/lib/whatsapp";
 import { trackEvent } from "@/lib/analytics";
 
 export function FinalCta() {
-  const whatsappLink = buildWhatsAppLink("Olá! Vi o site da HILOS e quero conversar.");
+  const ref = useRef<HTMLElement>(null);
+  const lenis = useLenis();
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end end"] });
+
+  const clip = useTransform(
+    scrollYProgress,
+    [0, 0.6],
+    ["inset(16% 22% 16% 22% round 2.5rem)", "inset(0% 0% 0% 0% round 0rem)"],
+  );
+  const imageScale = useTransform(scrollYProgress, [0, 0.6], [1.35, 1]);
+  const textOpacity = useTransform(scrollYProgress, [0.35, 0.6], [0, 1]);
+  const textY = useTransform(scrollYProgress, [0.35, 0.65], [80, 0]);
+  const lineOneX = useTransform(scrollYProgress, [0.3, 0.7], ["-20%", "0%"]);
+  const lineTwoX = useTransform(scrollYProgress, [0.3, 0.7], ["20%", "0%"]);
 
   return (
-    <section className="relative py-24 md:py-32">
-      <SectionDot />
-      <div className="rail-gutter container-hilos">
-        <div className="grid grid-cols-1 items-center gap-10 md:grid-cols-2 md:gap-16">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.94 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true, margin: "-10%" }}
-            transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-            className="md:order-2"
-          >
-            <ImagePlaceholder
-              label="Coleção HILOS completa"
-              tone="rose"
-              ambient
-              className="aspect-[4/5] w-full rounded-sm"
+    <section
+      ref={ref}
+      data-thread="0.95:0.02 0.9:0.3 0.86:0.5:loop 0.93:0.86 0.035:0.995"
+      data-thread-mobile="0.975:0.02 0.975:0.5 0.97:0.86 0.025:0.995"
+      className="relative h-[220vh]"
+    >
+      <div className="sticky top-0 h-[100svh] overflow-hidden">
+        <motion.div style={{ clipPath: clip }} className="absolute inset-0 bg-ink">
+          <motion.div style={{ scale: imageScale }} className="absolute inset-0">
+            <Image
+              src={photos.vestidoFluido}
+              alt="Modelo com vestido fluido HILOS"
+              fill
+              sizes="100vw"
+              placeholder="blur"
+              className="object-cover object-[50%_30%]"
             />
           </motion.div>
+          <div className="absolute inset-0 bg-ink/45" />
+        </motion.div>
 
-          <div className="md:order-1">
-            <RevealLines
-              as="h2"
-              lines={["Qual é o", "seu estilo?"]}
-              className="font-display text-4xl font-medium md:text-6xl"
-            />
-
-            <motion.div
-              initial={{ opacity: 0, y: 16 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-10%" }}
-              transition={{ duration: 0.6, delay: 0.3 }}
-              className="mt-9 flex flex-wrap gap-4"
-            >
-              <Magnetic>
-                <motion.a
-                  href={whatsappLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={() => trackEvent("final_cta_whatsapp_click")}
-                  whileHover={{ scale: 1.04 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="eyebrow inline-block rounded-full bg-ink px-7 py-4 text-cream transition-colors hover:bg-terracotta"
-                >
-                  Falar com a HILOS
-                </motion.a>
-              </Magnetic>
-              <Magnetic>
-                <motion.a
-                  href="#movimento"
-                  onClick={() => trackEvent("final_cta_northway_click")}
-                  whileHover={{ scale: 1.04 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="eyebrow inline-block rounded-full border border-ink/30 px-7 py-4 text-ink transition-colors hover:border-terracotta hover:text-terracotta"
-                >
-                  Visitar o North Way
-                </motion.a>
-              </Magnetic>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={{ once: true, margin: "-10%" }}
-              transition={{ delay: 0.5, duration: 0.6 }}
-              className="mt-14 flex items-center gap-3 text-ink-soft"
-            >
-              <motion.span
-                initial={{ scaleX: 0 }}
-                whileInView={{ scaleX: 1 }}
-                viewport={{ once: true, margin: "-10%" }}
-                transition={{ delay: 0.55, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-                className="h-px w-10 origin-left bg-terracotta"
-              />
-              <span className="font-display text-lg">HILOS</span>
-            </motion.div>
+        <motion.div
+          style={{ opacity: textOpacity, y: textY }}
+          className="relative flex h-full flex-col items-center justify-center px-5 text-center text-cream"
+        >
+          <p className="eyebrow mb-6 text-rose">Pronta para o próximo passo?</p>
+          <h2 className="font-display text-[17vw] leading-[0.85] font-medium md:text-[10vw]">
+            <motion.span style={{ x: lineOneX }} className="block">
+              Qual é o
+            </motion.span>
+            <motion.span style={{ x: lineTwoX }} className="block text-terracotta italic">
+              seu estilo?
+            </motion.span>
+          </h2>
+          <div className="mt-10 flex flex-wrap justify-center gap-4">
+            <Magnetic>
+              <a
+                href={buildWhatsAppLink("Olá! Vi o site da HILOS e quero conversar.")}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => trackEvent("final_cta_whatsapp_click")}
+                className="eyebrow group relative inline-flex overflow-hidden rounded-full bg-cream px-8 py-5 text-ink"
+              >
+                <span className="absolute inset-0 translate-y-full bg-terracotta transition-transform duration-500 ease-[cubic-bezier(0.76,0,0.24,1)] group-hover:translate-y-0" />
+                <span className="relative transition-colors duration-500 group-hover:text-cream">Falar com a HILOS</span>
+              </a>
+            </Magnetic>
+            <Magnetic>
+              <a
+                href="#movimento"
+                onClick={(e) => {
+                  e.preventDefault();
+                  trackEvent("final_cta_northway_click");
+                  scrollToHash(lenis, "#movimento");
+                }}
+                className="eyebrow inline-flex rounded-full border border-cream/50 px-8 py-5 transition-colors hover:border-terracotta hover:bg-terracotta"
+              >
+                Visitar o North Way
+              </a>
+            </Magnetic>
           </div>
-        </div>
+        </motion.div>
       </div>
     </section>
   );

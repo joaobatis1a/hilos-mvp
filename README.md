@@ -12,7 +12,7 @@
 MVP de landing page para a HILOS, marca de moda de Pernambuco, construído a partir de um briefing de identidade visual ("HILOS — Fios em Movimento"): uma página única guiada por um fio condutor visual que nasce no hero, atravessa cada seção e volta a se conectar à marca no CTA final.
 
 🔗 **Demo:** [hilos-mvp.vercel.app](https://hilos-mvp.vercel.app)
-*(sem fotografia real e com dados comerciais de placeholder — ver [pendências](#pendências-de-conteúdo))*
+*(fotos ilustrativas do Unsplash e dados comerciais de placeholder — ver [pendências](#pendências-de-conteúdo))*
 
 ![Captura de tela do HILOS](docs/img/preview.png)
 
@@ -20,22 +20,29 @@ MVP de landing page para a HILOS, marca de moda de Pernambuco, construído a par
 
 ## Funcionalidades
 
-- Hero com CTA duplo (coleção / onde encontrar) e atalho direto para WhatsApp
-- Manifesto com texto revelado conforme o scroll
-- Coleção em cards editoriais com tilt 3D e swipe horizontal no mobile
-- Produto destaque com CTA que abre o WhatsApp com mensagem pré-pronta — o principal evento de conversão mensurável
-- Seção "HILOS em Movimento" com locais e badges de status
-- Atacado: formulário que monta a mensagem e abre no WhatsApp, sem backend
-- Seção Instagram (`#usehilos`) com grade de placeholders para UGC
-- O "fio": linha vertical que cresce com o scroll e acende um ponto em cada seção — a assinatura visual do briefing
-- Eventos de analytics (GA4 / Meta Pixel) nos principais cliques de WhatsApp e no envio do formulário de atacado
+- **O fio**: um SVG curvo e orgânico que nasce no logo, atravessa a página inteira com nós e curvas, é "costurado" conforme o scroll (linha pontilhada à frente, fio sólido atrás) e leva uma agulha na ponta — termina amarrado ao botão "voltar ao topo" do footer
+- Preloader com o fio desenhando um nó e a marca surgindo letra a letra
+- Menu hambúrguer em tela cheia com revelação circular, categorias e preview de foto no hover
+- Hero com wordmark gigante, colagem de fotos com parallax pelo mouse e faixa marquee
+- Manifesto fixado no scroll, com as palavras acendendo uma a uma
+- Coleção em galeria horizontal fixada no scroll: cards em arco com etiqueta de roupa pendurada que balança com o movimento
+- Produto destaque com hotspots na foto e seletor de tamanho que vai direto para a mensagem do WhatsApp
+- "HILOS em Movimento" em painéis expansíveis com foto de cada ponto, alternando sozinhos
+- Atacado com spotlight que segue o mouse e formulário em 3 etapas que monta a mensagem no WhatsApp
+- Instagram em marquee duplo de fotos e CTA final com imagem que se expande no scroll
+- Footer com o fio fechando a narrativa e botão "voltar ao topo" giratório
+- Scroll suave e textura de grão
+- Eventos de analytics (GA4 / Meta Pixel) nos cliques de WhatsApp e no envio do formulário de atacado
 - SEO completo: metadata, OpenGraph, `sitemap.xml`, `robots.txt`, JSON-LD (`ClothingStore`)
+
+Todo o conteúdo editável (produtos, locais, links do menu, fotos) fica em `src/lib/content.ts`.
 
 ## Stack
 
 - [Next.js 16](https://nextjs.org) (App Router) + React 19 + TypeScript
 - Tailwind CSS v4
-- [Framer Motion](https://www.framer.com/motion/), reveals em scroll, parallax e o fio animado
+- [Framer Motion](https://www.framer.com/motion/) para todas as animações e o fio
+- [Lenis](https://lenis.darkroom.engineering/) para o scroll suave
 
 Projeto **frontend-only**: não há backend nem banco de dados — o formulário de atacado e os CTAs de produto convertem direto em um link do WhatsApp (`wa.me`) com mensagem pré-preenchida.
 
@@ -65,9 +72,9 @@ Abra [http://localhost:3000](http://localhost:3000). Sem `.env.local` preenchido
 
 Não dá para resolver sem a marca real por trás do briefing:
 
-- **Fotografia real** no lugar dos placeholders estilizados (cada um já indica, em legenda, o que deveria entrar ali)
+- **Fotografia real** da coleção e dos pontos de venda — as fotos atuais são do [Unsplash](https://unsplash.com/license) (uso livre) e ficam em `src/assets/photos/`
 - **História da marca** validada — o texto do Manifesto é um rascunho baseado no briefing
-- **Status dos locais** (North Way, Eventos, Aldeia, Patteo Olinda) — as badges são placeholders
+- **Status dos locais** (North Way, Eventos, Aldeia, Patteo Olinda) e **nomes/tecidos dos produtos** — são placeholders
 - **Número de WhatsApp, Instagram e logo vetorial** reais
 
 ## Deploy

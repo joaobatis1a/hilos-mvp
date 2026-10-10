@@ -1,72 +1,76 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { ImagePlaceholder } from "./ImagePlaceholder";
-import { SectionDot } from "./ThreadRail";
-import { RevealLines } from "./RevealLines";
+import Image, { type StaticImageData } from "next/image";
 import { Magnetic } from "./Magnetic";
+import { RevealLines } from "./RevealLines";
+import { VelocityMarquee } from "./VelocityMarquee";
+import { instagramShots } from "@/lib/content";
 import { siteConfig } from "@/lib/site";
 import { trackEvent } from "@/lib/analytics";
 
-export function InstagramSection() {
+function Shot({ src }: { src: StaticImageData }) {
   return (
-    <section className="relative py-24 md:py-32">
-      <SectionDot />
-      <div className="rail-gutter container-hilos">
-        <div className="mb-10 flex flex-wrap items-end justify-between gap-6 md:mb-14">
-          <div>
-            <p className="eyebrow mb-4 text-terracotta">Comunidade</p>
-            <RevealLines
-              as="h2"
-              lines={["Vista HILOS. Marque HILOS."]}
-              className="font-display text-3xl font-medium md:text-5xl"
-            />
-            <motion.p
-              initial={{ opacity: 0, y: 8 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.3, duration: 0.5 }}
-              className="font-display mt-3 text-xl text-terracotta italic"
-            >
-              #usehilos
-            </motion.p>
-          </div>
+    <a
+      href={siteConfig.instagramUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={`group relative mx-3 block aspect-[4/5] w-48 shrink-0 overflow-hidden rounded-2xl md:w-64`}
+    >
+      <Image src={src} alt="Look HILOS no Instagram" fill sizes="16rem" placeholder="blur" className="object-cover" />
+      <span className="absolute inset-0 flex items-end bg-gradient-to-t from-ink/70 to-transparent p-4 opacity-0 transition-opacity duration-500 group-hover:opacity-100">
+        <span className="eyebrow text-cream">{siteConfig.instagramHandle}</span>
+      </span>
+    </a>
+  );
+}
+
+export function InstagramSection() {
+  const firstRow = [...instagramShots.slice(0, 5), ...instagramShots.slice(0, 5)];
+  const secondRow = [...instagramShots.slice(5), ...instagramShots.slice(5)];
+
+  return (
+    <section
+      id="comunidade"
+      data-thread="0.03:0.05 0.035:0.3 0.5:0.52 0.97:0.68 0.95:0.97"
+      data-thread-mobile="0.025:0.04 0.025:0.45 0.5:0.6 0.975:0.75 0.975:0.98"
+      className="relative overflow-hidden py-24 md:py-32"
+    >
+      <div className="container-hilos mb-14 flex flex-wrap items-end justify-between gap-6">
+        <div>
+          <p className="eyebrow mb-4 text-terracotta">Comunidade</p>
+          <RevealLines
+            as="h2"
+            lines={["Vista HILOS.", "Marque HILOS."]}
+            className="font-display text-5xl leading-[0.95] font-medium md:text-7xl"
+          />
+        </div>
+        <div className="flex flex-col items-start gap-4 md:items-end">
+          <span className="font-display text-6xl text-terracotta italic md:text-8xl">#usehilos</span>
           <Magnetic>
-            <motion.a
+            <a
               href={siteConfig.instagramUrl}
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => trackEvent("instagram_follow_click")}
-              whileHover={{ scale: 1.04 }}
-              whileTap={{ scale: 0.95 }}
-              className="eyebrow inline-block rounded-full border border-ink/30 px-6 py-3 transition-colors hover:border-terracotta hover:text-terracotta"
+              className="eyebrow inline-flex rounded-full border border-ink px-6 py-3.5 transition-colors hover:border-terracotta hover:bg-terracotta hover:text-cream"
             >
-              Seguir no Instagram
-            </motion.a>
+              Seguir {siteConfig.instagramHandle}
+            </a>
           </Magnetic>
         </div>
+      </div>
 
-        <div className="grid grid-cols-3 gap-3 md:grid-cols-6 md:gap-4">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, scale: 0.85 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true, margin: "-10%" }}
-              transition={{
-                duration: 0.5,
-                delay: i * 0.06,
-                ease: [0.22, 1, 0.36, 1],
-              }}
-            >
-              <ImagePlaceholder
-                label="UGC"
-                tone={i % 2 === 0 ? "sand" : "rose"}
-                className="aspect-square w-full rounded-sm"
-              />
-            </motion.div>
+      <div className="pause-on-hover space-y-6 py-4">
+        <VelocityMarquee duration={45}>
+          {firstRow.map((src, i) => (
+            <Shot key={i} src={src} />
           ))}
-        </div>
+        </VelocityMarquee>
+        <VelocityMarquee duration={50} reverse>
+          {secondRow.map((src, i) => (
+            <Shot key={i} src={src} />
+          ))}
+        </VelocityMarquee>
       </div>
     </section>
   );

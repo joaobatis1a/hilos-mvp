@@ -5,7 +5,7 @@ import { motion, useMotionValue, useSpring } from "framer-motion";
 
 export function Magnetic({
   children,
-  strength = 0.4,
+  strength = 0.12,
   className = "",
 }: {
   children: ReactNode;
