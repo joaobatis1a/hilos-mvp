@@ -23,8 +23,8 @@ export function Locations() {
   return (
     <section
       id="movimento"
-      data-thread="0.03:0.04 0.5:0.13 0.97:0.2 0.975:0.9"
-      data-thread-mobile="0.975:0.0 0.5:0.035 0.025:0.075 0.025:0.95"
+      data-thread="0.03:0.02 0.5:0.05 0.97:0.09 0.975:0.9"
+      data-thread-mobile="0.975:0.0 0.5:0.035 0.025:0.075 0.03:0.3 0.55:0.6:loop 0.03:0.97"
       className="relative py-24 md:py-32"
     >
       <div className="container-hilos">

@@ -8,11 +8,14 @@ import { useLenis, scrollToHash } from "./SmoothScroll";
 import { photos } from "@/lib/content";
 import { buildWhatsAppLink } from "@/lib/whatsapp";
 import { trackEvent } from "@/lib/analytics";
+import { useCollapseAfterPass, useLatched } from "@/lib/motion";
 
 export function FinalCta() {
   const ref = useRef<HTMLElement>(null);
   const lenis = useLenis();
-  const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end end"] });
+  const { scrollYProgress: raw } = useScroll({ target: ref, offset: ["start start", "end end"] });
+  const scrollYProgress = useLatched(raw);
+  const collapsed = useCollapseAfterPass(ref, scrollYProgress);
 
   const clip = useTransform(
     scrollYProgress,
@@ -28,11 +31,11 @@ export function FinalCta() {
   return (
     <section
       ref={ref}
-      data-thread="0.95:0.02 0.9:0.3 0.86:0.5:loop 0.93:0.86 0.035:0.995"
-      data-thread-mobile="0.975:0.02 0.975:0.5 0.97:0.86 0.025:0.995"
-      className="relative h-[220vh]"
+      data-thread="0.95:0.02 0.96:0.3 0.96:0.5:loop 0.95:0.86 0.035:0.995"
+      data-thread-mobile="0.975:0.02 0.84:0.08:loop 0.975:0.4 0.975:0.85 0.025:0.995"
+      className={collapsed ? "relative h-[100svh]" : "relative h-[220vh]"}
     >
-      <div className="sticky top-0 h-[100svh] overflow-hidden">
+      <div className={`${collapsed ? "relative" : "sticky top-0"} h-[100svh] overflow-hidden`}>
         <motion.div style={{ clipPath: clip }} className="absolute inset-0 bg-ink">
           <motion.div style={{ scale: imageScale }} className="absolute inset-0">
             <Image

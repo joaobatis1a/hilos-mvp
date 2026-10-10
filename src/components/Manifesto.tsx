@@ -4,6 +4,7 @@ import { motion, useScroll, useTransform, type MotionValue } from "framer-motion
 import Image from "next/image";
 import { useRef } from "react";
 import { photos } from "@/lib/content";
+import { useCollapseAfterPass, useLatched } from "@/lib/motion";
 
 const TEXT =
   "Um fio se transforma em tecido. O tecido ganha movimento. O movimento encontra quem o veste.";
@@ -38,7 +39,9 @@ function Word({
 
 export function Manifesto() {
   const ref = useRef<HTMLElement>(null);
-  const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end end"] });
+  const { scrollYProgress: raw } = useScroll({ target: ref, offset: ["start start", "end end"] });
+  const scrollYProgress = useLatched(raw);
+  const collapsed = useCollapseAfterPass(ref, scrollYProgress);
   const words = TEXT.split(" ");
 
   const imageScale = useTransform(scrollYProgress, [0, 0.8], [0.55, 1]);
@@ -56,9 +59,15 @@ export function Manifesto() {
       ref={ref}
       data-thread="0.035:0.04 0.06:0.35 0.025:0.7 0.05:0.98"
       data-thread-mobile="0.025:0.04 0.04:0.5 0.022:0.98"
-      className="relative h-[260vh]"
+      className={collapsed ? "relative" : "relative h-[260vh]"}
     >
-      <div className="sticky top-0 flex h-[100svh] items-center overflow-hidden">
+      <div
+        className={
+          collapsed
+            ? "flex items-center overflow-hidden py-24 md:py-32"
+            : "sticky top-0 flex h-[100svh] items-center overflow-hidden"
+        }
+      >
         <div className="container-hilos grid grid-cols-1 items-center gap-8 md:grid-cols-[1.25fr_1fr] md:gap-16">
           <div className="order-2 md:order-1">
             <p className="eyebrow mb-6 flex items-center gap-3 text-terracotta">

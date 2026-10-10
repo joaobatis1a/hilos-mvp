@@ -8,6 +8,7 @@ import { RevealLines } from "./RevealLines";
 import { photos } from "@/lib/content";
 import { buildWhatsAppLink } from "@/lib/whatsapp";
 import { trackEvent } from "@/lib/analytics";
+import { useLatched } from "@/lib/motion";
 
 const HOTSPOTS = [
   { x: 52, y: 40, title: "Cintura confortável", text: "Cós que acompanha o corpo o dia inteiro." },
@@ -22,7 +23,8 @@ export function FeaturedProduct() {
   const [size, setSize] = useState("M");
 
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
-  const clip = useTransform(scrollYProgress, [0.05, 0.4], ["inset(18% 14% 18% 14% round 999px 999px 0 0)", "inset(0% 0% 0% 0% round 999px 999px 0 0)"]);
+  const revealed = useLatched(scrollYProgress);
+  const clip = useTransform(revealed, [0.05, 0.4], ["inset(18% 14% 18% 14% round 999px 999px 0 0)", "inset(0% 0% 0% 0% round 999px 999px 0 0)"]);
   const imageY = useTransform(scrollYProgress, [0, 1], ["-8%", "8%"]);
   const bigWordX = useTransform(scrollYProgress, [0, 1], ["20%", "-30%"]);
 
@@ -33,7 +35,7 @@ export function FeaturedProduct() {
       id="destaque"
       ref={ref}
       data-thread="0.97:0.06 0.93:0.45:loop 0.97:0.95"
-      data-thread-mobile="0.975:0.04 0.965:0.5 0.975:0.98"
+      data-thread-mobile="0.5:0.015 0.975:0.05 0.78:0.2:loop 0.975:0.55 0.975:0.98"
       className="relative overflow-hidden py-24 md:py-36"
     >
       <motion.span

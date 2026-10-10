@@ -10,7 +10,6 @@ import {
 import { useState, type FormEvent, type PointerEvent } from "react";
 import { Magnetic } from "./Magnetic";
 import { RevealLines } from "./RevealLines";
-import { VelocityMarquee } from "./VelocityMarquee";
 import { buildWhatsAppLink } from "@/lib/whatsapp";
 import { trackEvent } from "@/lib/analytics";
 
@@ -114,18 +113,6 @@ export function Wholesale() {
     >
       <motion.div aria-hidden style={{ background: spotlight }} className="pointer-events-none absolute inset-0" />
 
-      <div className="relative mb-16 border-y border-cream/10 py-3 md:mb-24">
-        <VelocityMarquee duration={22}>
-          {["Atacado", "Revenda", "Vista sua loja", "HILOS"].map((word) => (
-            <span key={word} className="flex items-center gap-10 pr-10 font-display text-6xl text-outline-cream md:text-[9rem]">
-              {word}
-              <span className="text-3xl text-terracotta" style={{ WebkitTextStroke: 0 }}>
-                ✺
-              </span>
-            </span>
-          ))}
-        </VelocityMarquee>
-      </div>
 
       <div className="container-hilos relative grid grid-cols-1 gap-14 md:grid-cols-[1fr_1.05fr] md:gap-20">
         <div>

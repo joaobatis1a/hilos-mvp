@@ -13,7 +13,6 @@ import { useRef, type PointerEvent } from "react";
 import { Magnetic } from "./Magnetic";
 import { RotatingBadge } from "./RotatingBadge";
 import { SplitText } from "./SplitText";
-import { VelocityMarquee } from "./VelocityMarquee";
 import { useLenis, scrollToHash } from "./SmoothScroll";
 import { photos } from "@/lib/content";
 import { buildWhatsAppLink } from "@/lib/whatsapp";
@@ -73,7 +72,7 @@ function ParallaxPhoto({
   );
 }
 
-export function Hero({ ready }: { ready: boolean }) {
+export function Hero() {
   const ref = useRef<HTMLElement>(null);
   const lenis = useLenis();
   const mxRaw = useMotionValue(0);
@@ -101,8 +100,8 @@ export function Hero({ ready }: { ready: boolean }) {
       ref={ref}
       onPointerMove={onPointerMove}
       data-thread="0.5:0.045 0.53:0.2 0.5:0.5:loop 0.25:0.86 0.04:0.98"
-      data-thread-mobile="0.5:0.03 0.2:0.05 0.025:0.09 0.025:0.98"
-      className="relative flex min-h-[100svh] flex-col overflow-hidden pt-20"
+      data-thread-mobile="0.5:0.03 0.975:0.09 0.975:0.4 0.6:0.6:loop 0.04:0.97"
+      className="relative flex min-h-[100svh] flex-col overflow-hidden pt-20 pb-16 md:pb-0"
     >
       <motion.div
         aria-hidden
@@ -114,7 +113,7 @@ export function Hero({ ready }: { ready: boolean }) {
             <motion.span
               className="inline-block"
               initial={{ y: "100%" }}
-              animate={ready ? { y: "0%" } : undefined}
+              animate={{ y: "0%" }}
               transition={{ duration: 1.4, ease: EASE, delay: 0.15 + i * 0.08 }}
             >
               {letter}
@@ -131,7 +130,7 @@ export function Hero({ ready }: { ready: boolean }) {
           mx={mx}
           my={my}
           scrollY={scrollY}
-          play={ready}
+          play
           delay={0.35}
           preload
           sizes="(min-width: 768px) 32vw, 80vw"
@@ -146,7 +145,7 @@ export function Hero({ ready }: { ready: boolean }) {
           mx={mx}
           my={my}
           scrollY={scrollY}
-          play={ready}
+          play
           delay={0.6}
           sizes="(min-width: 768px) 14vw, 38vw"
           className="absolute right-2 bottom-[16vh] z-20 aspect-[3/4] w-[36%] md:right-[34vw] md:bottom-[14vh] md:w-[13vw]"
@@ -160,7 +159,7 @@ export function Hero({ ready }: { ready: boolean }) {
           mx={mx}
           my={my}
           scrollY={scrollY}
-          play={ready}
+          play
           delay={0.8}
           sizes="12vw"
           className="absolute top-[12vh] right-[3vw] z-0 hidden aspect-square w-[11vw] md:block"
@@ -173,7 +172,7 @@ export function Hero({ ready }: { ready: boolean }) {
         >
           <motion.p
             initial={{ opacity: 0, x: -20 }}
-            animate={ready ? { opacity: 1, x: 0 } : undefined}
+            animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
             className="eyebrow mb-6 flex items-center gap-3 text-terracotta"
           >
@@ -182,16 +181,16 @@ export function Hero({ ready }: { ready: boolean }) {
           </motion.p>
 
           <h1 className="font-display text-[3.4rem] leading-[0.92] font-medium tracking-tight md:text-[6.4vw]">
-            <SplitText text="Fios que vestem" play={ready} delay={0.3} className="block" />
+            <SplitText text="Fios que vestem" play delay={0.3} className="block" />
             <span className="block">
-              <SplitText text="seus" play={ready} delay={0.65} />{" "}
-              <SplitText text="passos." play={ready} delay={0.75} className="text-terracotta italic" />
+              <SplitText text="seus" play delay={0.65} />{" "}
+              <SplitText text="passos." play delay={0.75} className="text-terracotta italic" />
             </span>
           </h1>
 
           <motion.p
             initial={{ opacity: 0, y: 16 }}
-            animate={ready ? { opacity: 1, y: 0 } : undefined}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 1.1 }}
             className="mt-6 max-w-sm text-base text-ink-soft md:text-lg"
           >
@@ -200,7 +199,7 @@ export function Hero({ ready }: { ready: boolean }) {
 
           <motion.div
             initial={{ opacity: 0, y: 16 }}
-            animate={ready ? { opacity: 1, y: 0 } : undefined}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 1.25 }}
             className="mt-8 flex flex-wrap items-center gap-3"
           >
@@ -235,7 +234,7 @@ export function Hero({ ready }: { ready: boolean }) {
 
         <motion.div
           initial={{ opacity: 0, scale: 0.6 }}
-          animate={ready ? { opacity: 1, scale: 1 } : undefined}
+          animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 1, delay: 1.4, ease: [0.22, 1, 0.36, 1] }}
           className="absolute top-[62vh] right-[5vw] z-30 hidden w-32 text-ink md:block"
         >
@@ -245,23 +244,6 @@ export function Hero({ ready }: { ready: boolean }) {
         </motion.div>
       </div>
 
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={ready ? { opacity: 1 } : undefined}
-        transition={{ delay: 1.6 }}
-        className="relative z-30 mt-10 bg-terracotta py-4 text-cream md:mt-auto"
-      >
-        <VelocityMarquee duration={26}>
-          {["Leve", "Fluida", "Autêntica", "Feita em Pernambuco", "Coleção Verão", "Viscolinho"].map(
-            (word) => (
-              <span key={word} className="flex items-center gap-8 pr-8 font-display text-2xl italic md:text-4xl">
-                {word}
-                <span className="text-base not-italic">✺</span>
-              </span>
-            ),
-          )}
-        </VelocityMarquee>
-      </motion.div>
     </section>
   );
 }

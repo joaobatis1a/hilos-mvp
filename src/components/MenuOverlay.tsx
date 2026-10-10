@@ -86,7 +86,7 @@ export function MenuOverlay({
                         {String(i + 1).padStart(2, "0")}
                       </span>
                       <span
-                        className={`font-display text-[2.6rem] leading-[1.05] transition-all duration-500 md:text-7xl ${
+                        className={`font-display text-[2.1rem] leading-[1.1] transition-all duration-500 md:text-[3.4rem] ${
                           active === i
                             ? "translate-x-3 text-terracotta italic"
                             : "text-cream"

@@ -10,7 +10,7 @@ import { trackEvent } from "@/lib/analytics";
 
 const EASE = [0.76, 0, 0.24, 1] as const;
 
-export function Header({ ready }: { ready: boolean }) {
+export function Header() {
   const [open, setOpen] = useState(false);
   const [hidden, setHidden] = useState(false);
   const [solid, setSolid] = useState(false);
@@ -42,7 +42,7 @@ export function Header({ ready }: { ready: boolean }) {
     <>
       <motion.header
         initial={{ y: "-100%" }}
-        animate={{ y: !ready || hidden ? "-110%" : "0%" }}
+        animate={{ y: hidden ? "-110%" : "0%" }}
         transition={{ duration: 0.7, ease: EASE }}
         className="fixed top-0 right-0 left-0 z-50"
       >

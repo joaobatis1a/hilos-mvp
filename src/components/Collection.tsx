@@ -1,7 +1,10 @@
 "use client";
 
 import {
+  animate,
   motion,
+  useMotionValue,
+  useMotionValueEvent,
   useScroll,
   useSpring,
   useTransform,
@@ -9,7 +12,8 @@ import {
   type MotionValue,
 } from "framer-motion";
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type WheelEvent } from "react";
+import { useCollapseAfterPass, useLatched } from "@/lib/motion";
 import { products, type Product } from "@/lib/content";
 import { buildWhatsAppLink } from "@/lib/whatsapp";
 import { trackEvent } from "@/lib/analytics";
@@ -38,6 +42,7 @@ function ProductCard({
           src={product.image}
           alt={`${product.name} HILOS`}
           fill
+          draggable={false}
           sizes="(min-width: 768px) 24vw, 74vw"
           placeholder="blur"
           className="object-cover transition-transform duration-[1400ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-110"
@@ -95,17 +100,33 @@ function ProductCard({
 export function Collection() {
   const sectionRef = useRef<HTMLElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
+  const dragged = useRef(false);
   const [distance, setDistance] = useState(0);
 
-  const { scrollYProgress } = useScroll({ target: sectionRef, offset: ["start start", "end end"] });
+  const { scrollYProgress: raw } = useScroll({ target: sectionRef, offset: ["start start", "end end"] });
+  const scrollYProgress = useLatched(raw);
+  const collapsed = useCollapseAfterPass(sectionRef, scrollYProgress);
   const { scrollY } = useScroll();
   const velocity = useVelocity(scrollY);
   const x = useTransform(scrollYProgress, [0.04, 0.96], [0, -distance]);
   const smoothX = useSpring(x, { stiffness: 120, damping: 30, mass: 0.4 });
-  const count = useTransform(scrollYProgress, (v) =>
-    String(Math.min(products.length, Math.floor(v * products.length) + 1)).padStart(2, "0"),
+  const freeX = useMotionValue(0);
+  const trackProgress = useMotionValue(0);
+  const count = useTransform(trackProgress, (v) =>
+    String(Math.min(products.length, Math.round(v * (products.length - 1)) + 1)).padStart(2, "0"),
   );
-  const titleX = useTransform(scrollYProgress, [0, 1], ["0%", "-12%"]);
+  const titleX = useTransform(trackProgress, [0, 1], ["0%", "-12%"]);
+
+  useMotionValueEvent(scrollYProgress, "change", (v) => {
+    if (!collapsed) trackProgress.set(Math.min(Math.max((v - 0.04) / 0.92, 0), 1));
+  });
+  useMotionValueEvent(freeX, "change", (v) => {
+    if (collapsed && distance) trackProgress.set(Math.min(Math.max(-v / distance, 0), 1));
+  });
+
+  useEffect(() => {
+    if (collapsed) freeX.set(smoothX.get());
+  }, [collapsed, freeX, smoothX]);
 
   useEffect(() => {
     const track = trackRef.current;
@@ -121,15 +142,38 @@ export function Collection() {
     };
   }, []);
 
+  const clamp = (v: number) => Math.min(Math.max(v, -distance), 0);
+
+  function step(direction: 1 | -1) {
+    const card = trackRef.current?.firstElementChild as HTMLElement | null;
+    const width = card ? card.offsetWidth + 40 : window.innerWidth * 0.3;
+    animate(freeX, clamp(freeX.get() - direction * width), {
+      type: "spring",
+      stiffness: 140,
+      damping: 24,
+    });
+  }
+
+  function onWheel(e: WheelEvent<HTMLDivElement>) {
+    if (!collapsed || Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return;
+    freeX.set(clamp(freeX.get() - e.deltaX));
+  }
+
   return (
     <section
       id="colecao"
       ref={sectionRef}
       data-thread="0.05:0.02 0.022:0.3 0.045:0.62 0.02:0.97"
       data-thread-mobile="0.022:0.02 0.035:0.4 0.022:0.97"
-      className="relative h-[420vh] bg-cream"
+      className={collapsed ? "relative bg-cream" : "relative h-[420vh] bg-cream"}
     >
-      <div className="sticky top-0 flex h-[100svh] flex-col justify-center gap-8 overflow-hidden md:gap-10">
+      <div
+        className={
+          collapsed
+            ? "relative flex flex-col gap-8 overflow-hidden py-20 md:gap-10 md:py-24"
+            : "sticky top-0 flex h-[100svh] flex-col justify-center gap-8 overflow-hidden md:gap-10"
+        }
+      >
         <motion.span
           aria-hidden
           style={{ x: titleX }}
@@ -157,13 +201,50 @@ export function Collection() {
                 fill="none"
                 stroke="var(--color-terracotta)"
                 strokeWidth="2"
-                style={{ pathLength: scrollYProgress }}
+                style={{ pathLength: trackProgress }}
               />
             </svg>
+            {collapsed && (
+              <div className="flex gap-2">
+                {([-1, 1] as const).map((dir) => (
+                  <button
+                    key={dir}
+                    type="button"
+                    onClick={() => step(dir)}
+                    aria-label={dir === 1 ? "Próximas peças" : "Peças anteriores"}
+                    className="flex h-11 w-11 items-center justify-center rounded-full border border-ink/25 transition-colors hover:border-terracotta hover:bg-terracotta hover:text-cream"
+                  >
+                    {dir === 1 ? "→" : "←"}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
-        <motion.div ref={trackRef} style={{ x: smoothX }} className="flex w-max items-end gap-6 px-5 md:gap-10 md:px-16">
+        <motion.div
+          ref={trackRef}
+          style={{ x: collapsed ? freeX : smoothX }}
+          drag={collapsed ? "x" : false}
+          dragConstraints={{ left: -distance, right: 0 }}
+          dragElastic={0.08}
+          onDragStart={() => {
+            dragged.current = true;
+          }}
+          onDragEnd={() => {
+            window.setTimeout(() => {
+              dragged.current = false;
+            }, 50);
+          }}
+          onClickCapture={(e) => {
+            if (dragged.current) {
+              e.preventDefault();
+              e.stopPropagation();
+            }
+          }}
+          onWheel={onWheel}
+          className={`flex w-max items-end gap-6 px-5 md:gap-10 md:px-16 ${collapsed ? "cursor-grab active:cursor-grabbing" : ""}`}
+        >
           {products.map((product, i) => (
             <ProductCard key={product.name} product={product} index={i} velocity={velocity} />
           ))}

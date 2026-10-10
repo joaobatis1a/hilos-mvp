@@ -18,7 +18,7 @@ type Geometry = { width: number; height: number; d: string; top: number };
 function parseAnchors(container: HTMLElement, mobile: boolean): Point[] {
   const width = container.offsetWidth;
   const base = container.getBoundingClientRect().top;
-  const loopRadius = mobile ? 16 : 46;
+  const loopRadius = mobile ? 30 : 46;
   const points: Point[] = [];
 
   container.querySelectorAll<HTMLElement>("[data-thread]").forEach((el) => {
@@ -35,22 +35,64 @@ function parseAnchors(container: HTMLElement, mobile: boolean): Point[] {
         const x = Number(fx) * width;
         const y = top + Number(fy) * rect.height;
         if (flag === "loop") {
-          const r = loopRadius;
-          points.push(
-            { x, y },
-            { x: x + r, y: y + r * 0.9 },
-            { x, y: y + r * 1.9 },
-            { x: x - r, y: y + r * 0.9 },
-            { x: x + r * 0.15, y: y + r * 0.15 },
-            { x: x + r * 0.6, y: y + r * 2.6 },
-          );
+          points.push(...loopPoints(x, y, loopRadius));
         } else {
           points.push({ x, y });
         }
       });
   });
 
-  return points;
+  return addWaves(points, width, mobile);
+}
+
+// A round cursive loop: a curtate trochoid travelling downwards, sampled
+// densely. It enters and leaves heading straight down, tangent to the thread,
+// so the curl reads as one continuous circle with no kink.
+function loopPoints(x: number, y: number, r: number): Point[] {
+  const drift = r * 0.45;
+  const samples = 28;
+  const out: Point[] = [];
+  for (let i = 0; i <= samples; i++) {
+    const t = Math.PI + (i / samples) * Math.PI * 2;
+    out.push({
+      x: x - r * (1 + Math.cos(t)),
+      y: y + drift * (t - Math.PI) - r * Math.sin(t),
+    });
+  }
+  return out;
+}
+
+// Long runs get a smooth sine sway (densely sampled, faded in and out at the
+// anchors) so the thread never falls in a straight line. Near the edges the
+// sway is clamped to stay inside the gutter.
+function addWaves(points: Point[], width: number, mobile: boolean): Point[] {
+  if (points.length < 2) return points;
+  const wavelength = mobile ? 380 : 620;
+  const spacing = wavelength / 12;
+  const out: Point[] = [points[0]];
+  for (let i = 1; i < points.length; i++) {
+    const a = points[i - 1];
+    const b = points[i];
+    const dy = b.y - a.y;
+    if (dy > wavelength * 0.75) {
+      const n = Math.floor(dy / spacing);
+      for (let k = 1; k < n; k++) {
+        const t = k / n;
+        const x = a.x + (b.x - a.x) * t;
+        const edge = Math.min(x, width - x);
+        const amp =
+          edge < width * 0.1
+            ? Math.max(Math.min(edge - 3, mobile ? 10 : 26), 0)
+            : width * (mobile ? 0.07 : 0.035);
+        const ramp = Math.min(1, t / 0.18, (1 - t) / 0.18);
+        const envelope = ramp * ramp * (3 - 2 * ramp);
+        const sway = Math.sin((2 * Math.PI * dy * t) / wavelength);
+        out.push({ x: x + amp * envelope * sway, y: a.y + dy * t });
+      }
+    }
+    out.push(b);
+  }
+  return out;
 }
 
 function toPath(points: Point[]) {
@@ -72,10 +114,8 @@ function toPath(points: Point[]) {
 
 export function Thread({
   containerRef,
-  ready,
 }: {
   containerRef: RefObject<HTMLDivElement | null>;
-  ready: boolean;
 }) {
   const [geometry, setGeometry] = useState<Geometry | null>(null);
   const [total, setTotal] = useState(0);
@@ -98,7 +138,7 @@ export function Thread({
     const points = parseAnchors(container, mobile);
     setGeometry({
       width: container.offsetWidth,
-      height: container.scrollHeight,
+      height: container.offsetHeight,
       d: toPath(points),
       top: container.getBoundingClientRect().top + window.scrollY,
     });
@@ -174,7 +214,7 @@ export function Thread({
     <motion.svg
       aria-hidden
       initial={{ opacity: 0 }}
-      animate={{ opacity: ready && total ? 1 : 0 }}
+      animate={{ opacity: total ? 1 : 0 }}
       transition={{ duration: 1, delay: 0.4 }}
       width={geometry.width}
       height={geometry.height}

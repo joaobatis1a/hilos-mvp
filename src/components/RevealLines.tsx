@@ -7,6 +7,7 @@ import {
   type MotionValue,
 } from "framer-motion";
 import { useRef, type Ref } from "react";
+import { useLatched } from "@/lib/motion";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
@@ -91,6 +92,7 @@ function ScrollReveal({
     target: ref,
     offset: ["start 0.95", "start 0.55"],
   });
+  const progress = useLatched(scrollYProgress);
 
   return (
     <MotionTag ref={ref as Ref<never>} className={className}>
@@ -102,7 +104,7 @@ function ScrollReveal({
             key={text}
             text={text}
             lineClassName={lineClassName}
-            progress={scrollYProgress}
+            progress={progress}
             start={start}
             end={end}
           />

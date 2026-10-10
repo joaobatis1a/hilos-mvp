@@ -21,15 +21,15 @@ MVP de landing page para a HILOS, marca de moda de Pernambuco, construído a par
 ## Funcionalidades
 
 - **O fio**: um SVG curvo e orgânico que nasce no logo, atravessa a página inteira com nós e curvas, é "costurado" conforme o scroll (linha pontilhada à frente, fio sólido atrás) e leva uma agulha na ponta — termina amarrado ao botão "voltar ao topo" do footer
-- Preloader com o fio desenhando um nó e a marca surgindo letra a letra
 - Menu hambúrguer em tela cheia com revelação circular, categorias e preview de foto no hover
-- Hero com wordmark gigante, colagem de fotos com parallax pelo mouse e faixa marquee
+- Hero com wordmark gigante, colagem de fotos com parallax pelo mouse
 - Manifesto fixado no scroll, com as palavras acendendo uma a uma
-- Coleção em galeria horizontal fixada no scroll: cards em arco com etiqueta de roupa pendurada que balança com o movimento
+- As cenas de scroll tocam uma única vez: as revelações não voltam em reverse, e as seções fixadas viram seções normais depois da primeira passagem
+- Coleção em galeria horizontal fixada no scroll na primeira passagem, que depois vira carrossel livre (arrastar, deslizar, trackpad e setas): cards em arco com etiqueta de roupa pendurada que balança com o movimento
 - Produto destaque com hotspots na foto e seletor de tamanho que vai direto para a mensagem do WhatsApp
 - "HILOS em Movimento" em painéis expansíveis com foto de cada ponto, alternando sozinhos
 - Atacado com spotlight que segue o mouse e formulário em 3 etapas que monta a mensagem no WhatsApp
-- Instagram em marquee duplo de fotos e CTA final com imagem que se expande no scroll
+- Instagram em carrossel contínuo de fotos e CTA final com imagem que se expande no scroll
 - Footer com o fio fechando a narrativa e botão "voltar ao topo" giratório
 - Scroll suave e textura de grão
 - Eventos de analytics (GA4 / Meta Pixel) nos cliques de WhatsApp e no envio do formulário de atacado

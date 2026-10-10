@@ -27,6 +27,11 @@
   box-sizing: border-box;
 }
 
+html,
+body {
+  overflow-anchor: none;
+}
+
 body {
   background: var(--color-cream);
   color: var(--color-ink);
@@ -118,39 +123,34 @@ body {
 
 @keyframes marquee {
   from {
-    transform: translateX(0);
+    transform: translate3d(0, 0, 0);
   }
   to {
-    transform: translateX(-50%);
+    transform: translate3d(-50%, 0, 0);
   }
 }
 
 @keyframes marquee-reverse {
   from {
-    transform: translateX(-50%);
+    transform: translate3d(-50%, 0, 0);
   }
   to {
-    transform: translateX(0);
+    transform: translate3d(0, 0, 0);
   }
+}
+
+.animate-marquee {
+  animation: marquee var(--marquee-duration, 40s) linear infinite;
+}
+
+.animate-marquee-reverse {
+  animation: marquee-reverse var(--marquee-duration, 40s) linear infinite;
 }
 
 @keyframes spin-slow {
   to {
     transform: rotate(360deg);
   }
-}
-
-.animate-marquee {
-  animation: marquee var(--marquee-duration, 30s) linear infinite;
-}
-
-.animate-marquee-reverse {
-  animation: marquee-reverse var(--marquee-duration, 30s) linear infinite;
-}
-
-.pause-on-hover:hover .animate-marquee,
-.pause-on-hover:hover .animate-marquee-reverse {
-  animation-play-state: paused;
 }
 
 .animate-spin-slow {
